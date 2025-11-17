@@ -9,23 +9,67 @@
 #include "smm_object.h"
 #include <string.h>
 
-#define MAX_NODETYPE    7
-#define MAX_GRADE       9
+#define MAX_NODENR      100 // node array
+#define MAX_NODETYPE    7   // node type array
+#define MAX_GRADE       9   // grade array
 
+#define SMMNODE_TYPE_LECTURE         0
+#define SMMNODE_TYPE_RESTAURANT      1
+#define SMMNODE_TYPE_LABORATORY      2
+#define SMMNODE_TYPE_HOME            3
+#define SMMNODE_TYPE_GOTOLAB         4
+#define SMMNODE_TYPE_FOODCHANCE      5
+#define SMMNODE_TYPE_FESTIVAL        6
 
+static char smmNodeName[MAX_NODETYPE][MAX_CHARNAME] = {
+       "lecture",
+       "restaurant",
+       "laboratory",
+       "home",
+       "gotoLab",
+       "foodChance",
+       "festival"
+};
+
+static int smm_nodeNr = 0; // saved node number
+static char smm_name[MAX_NODENR][MAX_CHARNAME];
+static int smm_type[MAX_NODENR];
+static int smm_credit[MAX_NODENR];
+static int smm_energy[MAX_NODENR];
 
 //object generation
-void smmObj_genNode(void)
+int smmObj_genNode(char* name, int type, int credit, int energy)
 {
-    
+     strcpy(smm_name[smm_nodeNr], name);
+     smm_type[smm_nodeNr] = type;
+     smm_credit[smm_nodeNr] = credit;
+     smm_energy[smm_nodeNr] = energy;
+     
+     smm_nodeNr++;
+     
+     return (smm_nodeNr);
 }
 
 
 
 //member retrieving
+char* smmObj_getName (int node_nr)
+{
+      return (smm_name[node_nr]);
+}
+
+int smmObj_getType (int node_nr)
+{
+      return (smm_type[node_nr]);
+}
+
+char* smmObj_getTypeName (int node_nr)
+{
+      return (smmNodeName[smm_type[node_nr]]);
+}
 
 
-
+#if 0
 //element to string
 char* smmObj_getNodeName(smmNode_e type)
 {
@@ -36,4 +80,4 @@ char* smmObj_getGradeName(smmGrade_e grade)
 {
     return smmGradeName[grade];
 }
-
+#endif
