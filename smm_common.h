@@ -11,11 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_CHARNAME                200 // name length
+#define MAX_CHARNAME                200 // Max name length
 
 #define GRADUATE_CREDIT             30
 #define MAX_DIE                     6
-#define MAX_PLAYER                  10
+#define MAX_PLAYER                  10 // Max player number
 
 
 #endif /* smm_common_h */

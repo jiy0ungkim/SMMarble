@@ -20,25 +20,66 @@
 static int board_nr;
 static int food_nr;
 static int festival_nr;
+static int player_nr; 
 
+static int player_pos[MAX_PLAYER]; // player's position
+static int player_credit[MAX_PLAYER]; // player's credit
+static int player_name[MAX_PLAYER][MAX_CHARNAME]; // player's name
+static int player_energy[MAX_PLAYER]; // player's name
 
+void goForward(int player, int step); //make player go "step" steps on the board (check if player is graduated)
+void printPlayerStatus(void); //print all player status at the beginning of each turn
+void generatePlayers(int n, int initEnergy); //generate a new player
 
 //function prototypes
 #if 0
 int isGraduated(void); //check if any player is graduated
-void generatePlayers(int n, int initEnergy); //generate a new player
 void printGrades(int player); //print grade history of the player
-void goForward(int player, int step); //make player go "step" steps on the board (check if player is graduated)
-void printPlayerStatus(void); //print all player status at the beginning of each turn
+
 float calcAverageGrade(int player); //calculate average grade of the player
 smmGrade_e takeLecture(int player, char *lectureName, int credit); //take the lecture (insert a grade of the player)
 void* findGrade(int player, char *lectureName); //find the grade from the player's grade history
 void printGrades(int player); //print all the grade history of the player
 #endif
 
+void goForward(int player, int step)
+{
+     int i;
+     //player_pos[player] = player_pos[player] + step;
+     printf("Start from %i (%s) (%i)\n", player_pos[player], 
+                                         smmObj_getName(player_pos[player]), step);
+     for (i=0; i<step; i++)
+     {    
+         player_pos[player] = (player_pos[player] + 1) % board_nr;
+         printf(" => moved to %i (%s)\n", player_pos[player], 
+                                          smmObj_getName(player_pos[player]));
+     }    
+}
 
+void printPlayerStatus(void)
+{
+     int i;
+     for (i=0; i<player_nr; i++)
+     {
+         printf("%s - position : %i (%s), credit : %i, energy : %i\n", 
+                    player_name[i], player_pos[i], smmObj_getName(player_pos[i]), player_credit[i], player_energy[i]); 
+     }
+}
 
-
+void generatePlayers(int n, int initEnergy) //generate a new player
+{
+     int i;
+     for (i=0; i<n; i++)
+     {
+         player_pos[i] = 0; // start position = home
+         player_credit[i] = 0; // init credit = 0
+         player_energy[i] = initEnergy; // init energy = initEnergy
+         
+         printf("Input %i-th player name: ", i);
+         scanf("%s", &player_name[i][0]);     
+     }
+}
+   
 int rolldie(int player)
 {
     char c;
@@ -76,8 +117,8 @@ int main(int argc, const char * argv[]) {
     int credit; 
     int energy;
     
-    int cnt = 5; //for testing
-    int pos; // for testing (current position)
+    int cnt; //for testing
+    int turn;
     
     board_nr = 0;
     food_nr = 0;
@@ -139,37 +180,40 @@ int main(int argc, const char * argv[]) {
     fclose(fp);
     printf("Total number of festival cards : %i\n", festival_nr);
     
-    
+    #endif
     
     //2. Player configuration ---------------------------------------------------------------------------------
-    /*
     do
     {
         //input player number to player_nr
+        printf("Input player number: ");
+        scanf("%i", &player_nr); 
+        fflush(stdin); // remove buffer
+        
+        if (player_nr <=0 || player_nr > MAX_PLAYER)
+           printf("Invalid player number!\n");
     }
-    while ();
-    generatePlayers();
-    */
-    #endif
+    while (player_nr <= 0 || player_nr > MAX_PLAYER);
+    
+    generatePlayers(player_nr, smmObj_getEnergy(0)); // init Energy = home energy
+    
     
     cnt = 0;
-    pos = 0;
+    turn = 0; // whose turn
     //3. SM Marble game starts ---------------------------------------------------------------------------------
     while (cnt<5) //is anybody graduated?
     {
         int die_result;
         
         //4-1. initial printing
-        //printPlayerStatus();
+        printPlayerStatus();
         
         //4-2. die rolling (if not in experiment)
-        
+        die_result = rolldie (turn);
         
         //4-3. go forward
-        //goForward();
-        //pos = pos + 2;
-        pos = (pos + rand()%6+1)%board_nr; //random move..
-        printf("node : %s, type : %i (%s)\n", smmObj_getName(pos), smmObj_getType(pos), smmObj_getTypeName(pos));
+        goForward(turn, die_result);
+        //printf("node : %s, type : %i (%s)\n", smmObj_getName(pos), smmObj_getType(pos), smmObj_getNodeName(pos));
         
 		//4-4. take action at the destination node of the board
         //actionNode();
@@ -177,7 +221,7 @@ int main(int argc, const char * argv[]) {
         //4-5. next turn
         
         cnt++;
-        
+        turn = (turn + 1)%player_nr;
     }
     
     system("PAUSE");
