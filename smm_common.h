@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_CHARNAME                200 // Max name length
+#define MAX_CHARNAME                200 // Max string length
 
 #define GRADUATE_CREDIT             30
 #define MAX_DIE                     6
