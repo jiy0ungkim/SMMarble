@@ -11,7 +11,16 @@
 
 #define MAX_NODENR      100 // node array
 #define MAX_NODETYPE    7   // node type array
-#define MAX_GRADE       9   // grade array
+
+#define GRADE_A+ =      0
+#define GRADE_A0 =      1
+#define GRADE_A- =      2
+#define GRADE_B+ =      3
+#define GRADE_B0 =      4
+#define GRADE_B- =      5
+#define GRADE_C+ =      6
+#define GRADE_C0 =      7
+#define GRADE_C- =      8
 
 static char smmObj_nodeName[MAX_NODETYPE][MAX_CHARNAME] = {
        "lecture",
@@ -23,59 +32,74 @@ static char smmObj_nodeName[MAX_NODETYPE][MAX_CHARNAME] = {
        "festival"
 };
 
-static int smm_nodeNr = 0; // saved node number
+static char smmObj_gradeName[MAX_GRADE][MAX_CHARNAME] = {
+       "A+",
+       "A0",
+       "A-",
+       "B+",
+       "B0",
+       "B-",
+       "C+",
+       "C0",
+       "C-"
+};
 
+//structure type definition
 typedef struct {
        char name[MAX_CHARNAME];
-       int type;
+       int objType; 
+       int type; // node type
        int credit;
        int energy;
-} smmObj_board_t; // _t: type (not instance)
+       int grade;
+} smmObj_object_t; // _t: type (not instance)
 
-static smmObj_board_t smmObj_board[MAX_NODENR];
+
+//static smmObj_board_t smmObj_board[MAX_NODENR];
+
 
 //object generation
-int smmObj_genNode(char* name, int type, int credit, int energy)
+void* smmObj_genObject(char* name, int objType, int type, int credit, int energy, int grade)
 {
-    strcpy(smmObj_board[smm_nodeNr].name, name);
-    smmObj_board[smm_nodeNr].type = type;
-    smmObj_board[smm_nodeNr].credit = credit;
-    smmObj_board[smm_nodeNr].energy = energy;
+    smmObj_object_t *ptr;
     
-    #if 0
-    strcpy(smm_name[smm_nodeNr], name);
-    smm_type[smm_nodeNr] = type;
-    smm_credit[smm_nodeNr] = credit;
-    smm_energy[smm_nodeNr] = energy;
-    #endif
-     
-    smm_nodeNr++;
-     
-    return (smm_nodeNr);
+    ptr = (smmObj_object_t *)malloc(sizeof(smmObj_object_t));
+    
+    strcpy(ptr->name, name);
+    ptr->type = type;
+    ptr->objType = objType;
+    ptr->credit = credit;
+    ptr->energy = energy;
+    ptr->grade = grade;
+    
+    return ((void*)ptr);
 }
 
 //member retrieving
-char* smmObj_getNodeName(int node_nr) // print class name
+char* smmObj_getObjectName(void *ptr) // print class name
 {
-      return (smmObj_board[node_nr].name);
+      smmObj_object_t *objPtr = (smmObj_object_t *)ptr;
+      return (objPtr->name);
 }
 
-int smmObj_getNodeType(int node_nr)
+int smmObj_getObjectType(void *ptr)
 {
-      return (smmObj_board[node_nr].type);
+    smmObj_object_t *objPtr = (smmObj_object_t *)ptr;
+    return (objPtr->type);
 }
 
-int smmObj_getNodeEnergy(int node_nr)
+int smmObj_getObjectEnergy(void *ptr)
 {
-      return (smmObj_board[node_nr].energy);
+    smmObj_object_t *objPtr = (smmObj_object_t *)ptr;
+    return (objPtr->energy);
 }
 
-char* smmObj_getTypeName(int node_type)
+char* smmObj_getObjectTypeName(void *ptr)
 {
       return (smmObj_board[node_type].name);
 }
 
-int smmObj_getNodeCredit(int node_nr)
+int smmObj_getObjectCredit(void *ptr)
 {
     return (smmObj_board[node_nr].credit);
 }
