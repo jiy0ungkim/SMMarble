@@ -15,8 +15,8 @@
 typedef struct node{
     int index;      //index of the node
     void* obj;      //object data
-    void* next;         //pointer to the next
-    void* prev;         //pointer to the next
+    void* next;     //pointer to the next
+    void* prev;     //pointer to the next
 } node_t;
 
 
