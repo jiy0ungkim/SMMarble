@@ -117,6 +117,13 @@ void goForward(int player, int step)
          //smm_players[player].pos = (smm_players[player].pos + 1) % smm_board_nr;
          printf(" => moved to %i (%s)\n", tmpPos, 
                                           smmObj_getObjectName(nodePtr));
+         if (i<(step-1) && smmObj_getObjectType(nodePtr) == SMMNODE_TYPE_HOME)
+         {
+            int homeEnergy = smmObj_getObjectEnergy(nodePtr);
+            smm_players[player].energy += homeEnergy;
+            printf(" [PASS HOME] energy +%i\n", homeEnergy);
+         }
+                                          
      }
      smm_players[player].pos = tmpPos;
 }
