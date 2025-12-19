@@ -62,8 +62,8 @@ typedef struct {
 } smmObj_food_t;
 
 typedef struct {
-        char festival[MAX_CHARNAME];
-} smmObj_festival_t;
+        char fest[MAX_CHARNAME];
+} smmObj_fest_t;
 
 //object generation
 void* smmObj_genObject(char* name, int objType, int type, int credit, int energy, int grade)
@@ -93,7 +93,18 @@ void* smmObj_genFood(char* foodName, int foodEnergy)
       
       return ((void*)foodPtr);
 }
+
+void* smmObj_genFest(char* fest)
+{
+      smmObj_fest_t *festPtr;
       
+      festPtr = (smmObj_fest_t *)malloc(sizeof(smmObj_fest_t));
+      
+      strcpy(festPtr->fest, fest);
+      
+      return ((void*)festPtr);
+}
+     
 //member retrieving
 char* smmObj_getObjectName(void *ptr) // print class name
 {
@@ -151,4 +162,12 @@ int smmObj_getObjectFoodEnergy(void *ptr)
     smmObj_food_t* foodPtr = (smmObj_food_t*)ptr;
     
     return (foodPtr->foodEnergy);
+}
+
+// Festival configuration
+char* smmObj_getObjectFest(void *ptr)
+{
+      smmObj_fest_t* festPtr = (smmObj_fest_t*)ptr;
+      
+      return (festPtr->fest);
 }

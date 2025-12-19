@@ -21,7 +21,7 @@
 //board configuration parameters
 static int smm_board_nr;
 static int smm_food_nr;
-static int smm_festival_nr;
+static int smm_fest_nr;
 static int smm_player_nr; 
 
 typedef struct{
@@ -122,8 +122,7 @@ void goForward(int player, int step)
             int homeEnergy = smmObj_getObjectEnergy(nodePtr);
             smm_players[player].energy += homeEnergy;
             printf(" [PASS HOME] energy +%i\n", homeEnergy);
-         }
-                                          
+         }                  
      }
      smm_players[player].pos = tmpPos;
 }
@@ -178,19 +177,22 @@ int rolldie(int player)
 //action code when a player stays at a node
 void actionNode(int player)
 {
+     int foodIdx = rand()%smm_food_nr; // random food chance
+     int festIdx = rand()%smm_fest_nr; //random festival
+     
      void *nodePtr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
-     void *foodPtr = smmdb_getData(LISTNO_FOODCARD, smm_players[player].pos);
+     void *foodPtr = smmdb_getData(LISTNO_FOODCARD, foodIdx);
+     void *festPtr = smmdb_getData(LISTNO_FESTCARD, festIdx);
      void *gradePtr;
      
      int type = smmObj_getObjectType(nodePtr);
      char* typeName = smmObj_getObjectTypeName(nodePtr);
      int credit = smmObj_getObjectCredit(nodePtr);
      int energy = smmObj_getObjectEnergy(nodePtr);
-     
-     int grade;
-     
      char* foodName = smmObj_getObjectFoodName(foodPtr);
      int foodEnergy = smmObj_getObjectFoodEnergy(foodPtr);
+     char* fest = smmObj_getObjectFest(festPtr);
+     int grade;
      
      switch(type)
      {
@@ -221,6 +223,7 @@ void actionNode(int player)
         case SMMNODE_TYPE_RESTAURANT:
              printf(" --> [%ith Player RESULT] pose : %i | type : %s | energy : +%i\n", 
                       player, smm_players[player].pos, typeName, energy);
+                      
              smm_players[player].energy += energy;
              break;
              
@@ -248,8 +251,9 @@ void actionNode(int player)
              break;
              
         case SMMNODE_TYPE_FESTIVAL:
+             printf(" --> [%ith Player RESULT] pose : %i | type : %s | fest : %s\n", 
+                      player, smm_players[player].pos, typeName, fest);
              break;
-             
         //case lecture:
         default:
             break;
@@ -267,13 +271,13 @@ int main(int argc, const char * argv[])
     char foodName[MAX_CHARNAME];
     int foodEnergy;
     
-    char festival[MAX_CHARNAME];
+    char fest[MAX_CHARNAME]; // festival
     
     int turn;
     
     smm_board_nr = 0;
     smm_food_nr = 0;
-    smm_festival_nr = 0;
+    smm_fest_nr = 0;
     
     srand((unsigned)time(NULL));
     
@@ -315,18 +319,17 @@ int main(int argc, const char * argv[])
     printf("\n\nReading food card component......\n");
     while (fscanf(fp, "%s %i", foodName, &foodEnergy) == 2) //read a food parameter set
     {
+          //store the parameter set
           void *foodPtr = smmObj_genFood(foodName, foodEnergy);
           if (smmdb_addTail(LISTNO_FOODCARD, foodPtr) < 0) {
              printf("[ERROR] failed to add food \n");
              return -1;
           }
-          smm_food_nr++;
-        //store the parameter set
+          smm_food_nr++; 
     }
     fclose(fp);
     printf("Total number of food cards : %i\n", smm_food_nr);
     
-    # if 0
     //3. festival card config 
     if ((fp = fopen(FESTFILEPATH,"r")) == NULL)
     {
@@ -335,14 +338,20 @@ int main(int argc, const char * argv[])
     }
     
     printf("\n\nReading festival card component......\n");
-    while () //read a festival card string
+    while (fscanf(fp, "%s", fest) == 1) //read a festival card string
     {
-        //store the parameter set
+          //store the parameter set
+          void *festPtr = smmObj_genFest(fest);
+          if (smmdb_addTail(LISTNO_FESTCARD, festPtr) < 0)
+          {
+             printf("[ERROR] failed to add festival \n");
+             return -1;
+          }
+          smm_fest_nr++;
     }
     fclose(fp);
-    printf("Total number of festival cards : %i\n", festival_nr);
-    #endif
-    
+    printf("Total number of festival cards : %i\n", smm_fest_nr);
+
     //2. Player configuration ---------------------------------------------------------------------------------
     do
     {
