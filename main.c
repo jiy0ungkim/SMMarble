@@ -168,24 +168,22 @@ int rolldie(int player)
     return (rand()%MAX_DIE + 1);
 }
 
-
 //action code when a player stays at a node
 void actionNode(int player)
 {
      void *nodePtr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
+     void *foodPtr = smmdb_getData(LISTNO_FOODCARD, smm_players[player].pos);
      void *gradePtr;
      
      int type = smmObj_getObjectType(nodePtr);
+     char* typeName = smmObj_getObjectTypeName(nodePtr);
      int credit = smmObj_getObjectCredit(nodePtr);
      int energy = smmObj_getObjectEnergy(nodePtr);
+     
      int grade;
      
-     printf(" -->[Die Result] player%i pose : %i, type : %s, credit : %i, energy : %i\n", 
-              player, 
-              smm_players[player].pos, 
-              smmObj_getObjectTypeName(nodePtr), 
-              credit, 
-              energy);
+     char* foodName = smmObj_getObjectFoodName(foodPtr);
+     int foodEnergy = smmObj_getObjectFoodEnergy(foodPtr);
      
      switch(type)
      {
@@ -193,7 +191,9 @@ void actionNode(int player)
              if(findGrade(player, smmObj_getObjectName(nodePtr)) == NULL && smm_players[player].energy >= energy) // 재수강 불가 & 에너지 충분 필요 
              {
                  int ch;
-                  
+                 
+                 printf(" --> [%ith Player RESULT] pose : %i | type : %s | credit : +%i | energy : -%i\n", 
+                          player, smm_players[player].pos, typeName, credit, energy);
                  printf("Take this lecture? (y / n): ");
                  ch = getchar();
                  fflush(stdin);
@@ -212,6 +212,8 @@ void actionNode(int player)
              break;
         
         case SMMNODE_TYPE_RESTAURANT:
+             printf(" --> [%ith Player RESULT] pose : %i | type : %s | energy : +%i\n", 
+                      player, smm_players[player].pos, typeName, energy);
              smm_players[player].energy += energy;
              break;
              
@@ -219,7 +221,11 @@ void actionNode(int player)
              break;
              
         case SMMNODE_TYPE_HOME:
+             printf(" --> [%ith Player RESULT] pose : %i | type : %s | energy : +%i\n", 
+                      player, smm_players[player].pos, typeName, energy);
+                      
              smm_players[player].energy += energy;
+             
              if (smm_players[player].credit >= GRADUATE_CREDIT)
                 smm_players[player].flag_graduated = 1; // graduation
              break;
@@ -228,6 +234,10 @@ void actionNode(int player)
              break;
              
         case SMMNODE_TYPE_FOODCHANCE:
+             printf(" --> [%ith Player RESULT] pose : %i | type : %s | food : %s | energy : %i\n", 
+                      player, smm_players[player].pos, typeName, foodName, foodEnergy);
+                      
+             smm_players[player].energy += foodEnergy;
              break;
              
         case SMMNODE_TYPE_FESTIVAL:
@@ -239,14 +249,18 @@ void actionNode(int player)
      }
 }
 
-
-int main(int argc, const char * argv[]) {
-    
+int main(int argc, const char * argv[]) 
+{
     FILE* fp;
     char name[MAX_CHARNAME]; 
     int type; // node type
     int credit; 
     int energy;
+    
+    char foodName[MAX_CHARNAME];
+    int foodEnergy;
+    
+    char festival[MAX_CHARNAME];
     
     int turn;
     
@@ -270,20 +284,20 @@ int main(int argc, const char * argv[]) {
     while (fscanf(fp, "%s %i %i %i", name, &type, &credit, &energy) == 4) //read a node parameter set
     {
         //store the parameter set
-        void *ptrObj = smmObj_genObject(name, SMMNODE_OBJTYPE_BOARD, type, credit, energy, 0);
+        void *opjPtr = smmObj_genObject(name, SMMNODE_OBJTYPE_BOARD, type, credit, energy, 0);
         //printf("%s %i %i %i\n", name, type, credit, energy); 
-        if (smmdb_addTail(LISTNO_NODE, ptrObj) < 0) {
+        if (smmdb_addTail(LISTNO_NODE, opjPtr) < 0) {
            printf("[ERROR] failed to add node \n");
            return -1;
         }
         smm_board_nr++;
-        //smm_board_nr = smmdb_addTail(LISTNO_NODE, ptrObj);  
+        //smm_board_nr = smmdb_addTail(LISTNO_NODE, opjPtr);  
     }
     fclose(fp);
     
     printf("Total number of board nodes : %i\n", smm_board_nr);
     
-    # if 0
+
     //2. food card config 
     if ((fp = fopen(FOODFILEPATH,"r")) == NULL)
     {
@@ -292,14 +306,20 @@ int main(int argc, const char * argv[]) {
     }
     
     printf("\n\nReading food card component......\n");
-    while () //read a food parameter set
+    while (fscanf(fp, "%s %i", foodName, &foodEnergy) == 2) //read a food parameter set
     {
+          void *foodPtr = smmObj_genFood(foodName, foodEnergy);
+          if (smmdb_addTail(LISTNO_FOODCARD, foodPtr) < 0) {
+             printf("[ERROR] failed to add food \n");
+             return -1;
+          }
+          smm_food_nr++;
         //store the parameter set
     }
     fclose(fp);
-    printf("Total number of food cards : %i\n", food_nr);
+    printf("Total number of food cards : %i\n", smm_food_nr);
     
-    
+    # if 0
     //3. festival card config 
     if ((fp = fopen(FESTFILEPATH,"r")) == NULL)
     {

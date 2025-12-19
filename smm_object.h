@@ -45,8 +45,6 @@
     C-
 */
 
-
-
 //object generation
 void* smmObj_genObject(char* name, int objType, int type, int credit, int energy, int grade);
 char* smmObj_getObjectName(void *ptr);
@@ -54,10 +52,16 @@ int smmObj_getObjectType(void *ptr);
 char* smmObj_getObjectTypeName(void *ptr);
 int smmObj_getObjectEnergy(void *ptr);
 int smmObj_getObjectCredit(void *ptr);
+
+// object generation (grade)
+char* smmObj_getObjectGradeName(void *ptr);
+
+// 
+void* smmObj_genFood(char* foodName, int foodEnergy);
+char* smmObj_getObjectFoodName(void *ptr);
+int smmObj_getObjectFoodEnergy(void *ptr);
 //member retrieving
 
-
-//element to string
 
 
 

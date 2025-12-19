@@ -47,17 +47,23 @@ static char smmObj_gradeName[SMMNODE_MAX_GRADE][MAX_CHARNAME] = {
 
 //structure type definition
 typedef struct {
+       // node
        char name[MAX_CHARNAME];
        int objType; 
        int type; // node type
        int credit;
        int energy;
-       int grade;
+       int grade;       
 } smmObj_object_t; // _t: type (not instance)
 
+typedef struct {
+       char foodName[MAX_CHARNAME];
+       int foodEnergy;
+} smmObj_food_t;
 
-//static smmObj_board_t smmObj_board[MAX_NODENR];
-
+typedef struct {
+        char festival[MAX_CHARNAME];
+} smmObj_festival_t;
 
 //object generation
 void* smmObj_genObject(char* name, int objType, int type, int credit, int energy, int grade)
@@ -76,6 +82,18 @@ void* smmObj_genObject(char* name, int objType, int type, int credit, int energy
     return ((void*)ptr);
 }
 
+void* smmObj_genFood(char* foodName, int foodEnergy)
+{
+      smmObj_food_t *foodPtr;
+      
+      foodPtr = (smmObj_food_t *)malloc(sizeof(smmObj_food_t));
+      
+      strcpy(foodPtr->foodName, foodName);
+      foodPtr->foodEnergy = foodEnergy;
+      
+      return ((void*)foodPtr);
+}
+      
 //member retrieving
 char* smmObj_getObjectName(void *ptr) // print class name
 {
@@ -112,9 +130,25 @@ int smmObj_getObjectCredit(void *ptr)
     return (objPtr->credit);
 }
 
+// Grade configuration
 char* smmObj_getObjectGradeName(void *ptr)
 {
       smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
+      
       return (smmObj_gradeName[objPtr->grade]);
 }
 
+// Food configuration
+char* smmObj_getObjectFoodName(void *ptr)
+{
+    smmObj_food_t* foodPtr = (smmObj_food_t*)ptr;
+    
+    return (foodPtr->foodName);
+}
+
+int smmObj_getObjectFoodEnergy(void *ptr)
+{
+    smmObj_food_t* foodPtr = (smmObj_food_t*)ptr;
+    
+    return (foodPtr->foodEnergy);
+}
