@@ -8,19 +8,20 @@
 #include "smm_common.h"
 #include "smm_object.h"
 #include <string.h>
+#include <stdlib.h>
 
 #define MAX_NODENR      100 // node array
 #define MAX_NODETYPE    7   // node type array
 
-#define GRADE_A+ =      0
-#define GRADE_A0 =      1
-#define GRADE_A- =      2
-#define GRADE_B+ =      3
-#define GRADE_B0 =      4
-#define GRADE_B- =      5
-#define GRADE_C+ =      6
-#define GRADE_C0 =      7
-#define GRADE_C- =      8
+#define GRADE_A_PLUS    0
+#define GRADE_A0        1
+#define GRADE_A_MINUS   2
+#define GRADE_B_PLUS    3
+#define GRADE_B0        4
+#define GRADE_B_MINUS   5
+#define GRADE_C_PLUS    6
+#define GRADE_C0        7
+#define GRADE_C_MINUS   8
 
 static char smmObj_nodeName[MAX_NODETYPE][MAX_CHARNAME] = {
        "lecture",
@@ -32,7 +33,7 @@ static char smmObj_nodeName[MAX_NODETYPE][MAX_CHARNAME] = {
        "festival"
 };
 
-static char smmObj_gradeName[MAX_GRADE][MAX_CHARNAME] = {
+static char smmObj_gradeName[SMMNODE_MAX_GRADE][MAX_CHARNAME] = {
        "A+",
        "A0",
        "A-",
@@ -78,41 +79,42 @@ void* smmObj_genObject(char* name, int objType, int type, int credit, int energy
 //member retrieving
 char* smmObj_getObjectName(void *ptr) // print class name
 {
-      smmObj_object_t *objPtr = (smmObj_object_t *)ptr;
+      smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
+      
       return (objPtr->name);
 }
 
 int smmObj_getObjectType(void *ptr)
 {
-    smmObj_object_t *objPtr = (smmObj_object_t *)ptr;
+    smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
+    
     return (objPtr->type);
 }
 
 int smmObj_getObjectEnergy(void *ptr)
 {
-    smmObj_object_t *objPtr = (smmObj_object_t *)ptr;
+    smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
+    
     return (objPtr->energy);
 }
 
 char* smmObj_getObjectTypeName(void *ptr)
 {
-      return (smmObj_board[node_type].name);
+      smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
+      
+      return (smmObj_nodeName[objPtr->type]);
 }
 
 int smmObj_getObjectCredit(void *ptr)
 {
-    return (smmObj_board[node_nr].credit);
+    smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
+    
+    return (objPtr->credit);
 }
 
-#if 0
-//element to string
-char* smmObj_getNodeName(smmNode_e type)
+char* smmObj_getObjectGradeName(void *ptr)
 {
-    return smmNodeName[type];
+      smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
+      return (smmObj_gradeName[objPtr->grade]);
 }
 
-char* smmObj_getGradeName(smmGrade_e grade)
-{
-    return smmGradeName[grade];
-}
-#endif
