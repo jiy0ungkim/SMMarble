@@ -29,7 +29,10 @@ typedef struct{
         int credit; // player's credit
         char name[MAX_CHARNAME]; // player's name
         int energy; // player's energy
-        int flag_graduated;
+        
+        int flag_graduated; // 0: not graduated, 1: graduated
+        int flag_experimenting; // 0: not experimenting, 1: experimenting
+        int exp_success_thr; // experiment success criterion(threshold) (1~MAX_DIE)
 } smm_player_t;
 
 smm_player_t *smm_players; // dynamic memory allocation
@@ -153,7 +156,9 @@ void generatePlayers(int n, int initEnergy) //generate a new player
          smm_players[i].pos = 0; // start position = home
          smm_players[i].credit = 0; // init credit = 0
          smm_players[i].energy = initEnergy; // init energy = initEnergy
-         smm_players[i].flag_graduated = 0;
+         smm_players[i].flag_graduated = 0; // not graduated 
+         smm_players[i].flag_experimenting = 0; // not experimenting
+         smm_players[i].exp_success_thr = 0;
          
          printf("Input %i-th player name: ", i);
          scanf("%s", &smm_players[i].name[0]);
@@ -174,6 +179,41 @@ int rolldie(int player)
     return (rand()%MAX_DIE + 1);
 }
 
+int getRandomLabPos(void)
+{
+    int i;
+    int labCnt = 0;
+    int pick;
+    
+    // count laboratory node 
+    for (i=0; i<smm_board_nr; i++)
+    {
+        void *nodePtr = smmdb_getData(LISTNO_NODE, i);
+        if (smmObj_getObjectType(nodePtr) == SMMNODE_TYPE_LABORATORY)
+           labCnt++;
+    }
+    
+    if (labCnt == 0)
+       return -1;
+    
+    pick = rand() % labCnt;
+    
+    // pick random laboratory node
+    for (i=0; i<smm_board_nr; i++)
+    {
+        void *nodePtr = smmdb_getData(LISTNO_NODE, i);
+        if (smmObj_getObjectType(nodePtr) == SMMNODE_TYPE_LABORATORY)
+        {
+            if (pick == 0) 
+               return i;
+            pick--;
+        }
+    }
+    return -1;
+}
+
+
+
 //action code when a player stays at a node
 void actionNode(int player)
 {
@@ -193,6 +233,8 @@ void actionNode(int player)
      int foodEnergy = smmObj_getObjectFoodEnergy(foodPtr);
      char* fest = smmObj_getObjectFest(festPtr);
      int grade;
+     int labPos = getRandomLabPos();
+     int exp_result;
      
      switch(type)
      {
@@ -228,6 +270,33 @@ void actionNode(int player)
              break;
              
         case SMMNODE_TYPE_LABORATORY:
+             // not experimenting -> nothing.
+             if (smm_players[player].flag_experimenting == 0)
+             {
+                printf(" --> [%ith Player RESULT] pose : %i | type : %s (Not experimenting)\n", 
+                      player, smm_players[player].pos, typeName);
+                break;
+             }
+             
+             // experimenting state -> start experiment 
+             printf(" --> [%ith Player RESULT] pose : %i | type : %s (Not experimenting)\n", 
+                      player, smm_players[player].pos, typeName);
+             
+             smm_players[player].energy -= energy;
+             printf("     [LAB] Experiment! energy : %i (-%i)\n", smm_players[player].energy, energy);
+             
+             // roll die
+             exp_result = (rand() % MAX_DIE) + 1;
+             printf("     [LAB] die result = %i | threshold : %i\n", exp_result, smm_players[player].exp_success_thr);
+             
+             if (exp_result >= smm_players[player].exp_success_thr)
+             {
+                printf("     [LAB] SUCESS! Experiment finished. \n");
+                smm_players[player].flag_experimenting = 0;
+                smm_players[player].exp_success_thr = 0;
+             }
+             else
+                 printf("     [LAB] FAIL. \n");
              break;
              
         case SMMNODE_TYPE_HOME:
@@ -241,6 +310,26 @@ void actionNode(int player)
              break;
              
         case SMMNODE_TYPE_GOTOLAB:
+             printf(" --> [%ith Player RESULT] pose : %i | type : %s \n", player, smm_players[player].pos, typeName);
+             
+             // no laboratory node
+             if (labPos < 0)
+             {
+                printf("     [GOTOLAB] No LABOTRATORY node exists.\n");
+                break;
+             }
+             // set experimenting state
+             smm_players[player].flag_experimenting = 1;
+             
+             // set experimenting success threshold randomly
+             smm_players[player].exp_success_thr = (rand()%MAX_DIE +1 );
+             
+             // move to laboratory 
+             smm_players[player].pos = labPos;
+             
+             printf("     [GOTOLAB] Experimenting Success Threshold = %i. Move to LABORATORY at %i\n", 
+                      smm_players[player].exp_success_thr, labPos);
+             
              break;
              
         case SMMNODE_TYPE_FOODCHANCE:
@@ -374,8 +463,20 @@ int main(int argc, const char * argv[])
     {
         int die_result;
         
+        void *posPtr = smmdb_getData(LISTNO_NODE, smm_players[turn].pos);
+        int posType = smmObj_getObjectType(posPtr);
+        
         //4-1. initial printing
         printPlayerStatus();
+        
+        // experimenting state -> no goForward
+        if (smm_players[turn].flag_experimenting == 1 && posType == SMMNODE_TYPE_LABORATORY)
+        {
+            actionNode(turn);
+                             
+            turn = (turn + 1) % smm_player_nr;
+            continue;
+        }
         
         //4-2. die rolling (if not in experiment)
         die_result = rolldie(turn);
@@ -383,8 +484,7 @@ int main(int argc, const char * argv[])
         //4-3. go forward
         goForward(turn, die_result);
         
-        void *posPtr = smmdb_getData(LISTNO_NODE, smm_players[turn].pos);
-        
+        posPtr = smmdb_getData(LISTNO_NODE, smm_players[turn].pos); // update pose
         printf("node : %s, type : %i (%s)\n", 
                      smmObj_getObjectName(posPtr), 
                      smmObj_getObjectType(posPtr), 
