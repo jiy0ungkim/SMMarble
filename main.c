@@ -101,6 +101,18 @@ int isGraduated(void)
     return 0; // game continue
 }
 
+int getGraduatedPlayerIdx(void)
+{
+    int i;
+    
+    for (i=0; i<smm_player_nr; i++)
+    {
+        if (smm_players[i].flag_graduated == 1)
+           return i;
+    }
+    return -1;
+}
+
 void goForward(int player, int step)
 {
      int i;
@@ -124,7 +136,17 @@ void goForward(int player, int step)
          {
             int homeEnergy = smmObj_getObjectEnergy(nodePtr);
             smm_players[player].energy += homeEnergy;
-            printf(" [PASS HOME] energy +%i\n", homeEnergy);
+            printf("    [PASS HOME] energy +%i\n", homeEnergy);
+            
+            // graduation check 
+            if (smm_players[player].credit >= GRADUATE_CREDIT)
+            {
+               smm_players[player].flag_graduated = 1;
+               printf("    [PASS HOME] %s meets GRADUATE_CREDIT (%i/%i). GAME OVER! \n",
+                           smm_players[player].name, smm_players[player].credit, GRADUATE_CREDIT);
+               return;
+            }
+               
          }                  
      }
      smm_players[player].pos = tmpPos;
@@ -212,8 +234,6 @@ int getRandomLabPos(void)
     return -1;
 }
 
-
-
 //action code when a player stays at a node
 void actionNode(int player)
 {
@@ -239,26 +259,50 @@ void actionNode(int player)
      switch(type)
      {
         case SMMNODE_TYPE_LECTURE:
+             if (findGrade(player, smmObj_getObjectName(nodePtr)) != NULL)
+             {
+                printf(" --> [%ith PLAYER RESULT] pose : %i | type : %s\n", 
+                        player, smm_players[player].pos, typeName);
+                printf("     [LECTURE] You already took this lecture!\n");
+                break;
+             }
+             
+             if (smm_players[player].energy < energy)
+             {
+                printf(" --> [%ith PLAYER RESULT] pose : %i | type : %s\n", 
+                         player, smm_players[player].pos, typeName);
+                printf("     [LECTURE] Not enough energy! (%i/%i)\n", smm_players[player].energy, energy);
+                break;
+             }
              if(findGrade(player, smmObj_getObjectName(nodePtr)) == NULL && smm_players[player].energy >= energy) // 재수강 불가 & 에너지 충분 필요 
              {
                  int ch;
                  
                  printf(" --> [%ith Player RESULT] pose : %i | type : %s | credit : +%i | energy : -%i\n", 
                           player, smm_players[player].pos, typeName, credit, energy);
-                 printf("Take this lecture? (y / n): ");
-                 ch = getchar();
-                 fflush(stdin);
                  
-                 if (ch == 'y'){
-                    smm_players[player].credit += credit;
-                    smm_players[player].energy -= energy;
-
-                    grade = rand()%SMMNODE_MAX_GRADE;
-                    gradePtr = smmObj_genObject(smmObj_getObjectName(nodePtr), SMMNODE_OBJTYPE_GRADE, type, credit, energy, grade);
-                    smmdb_addTail(LISTNO_OFFSET_GRADE+player, gradePtr);
+                 
+                 while (1)
+                 {
+                       printf("Take this lecture? (y / n): ");
+                       ch = getchar();
+                       fflush(stdin);
+                       
+                       if (ch == 'y')
+                       {
+                          smm_players[player].credit += credit;
+                          smm_players[player].energy -= energy;
+                          
+                          grade = rand()%SMMNODE_MAX_GRADE;
+                          gradePtr = smmObj_genObject(smmObj_getObjectName(nodePtr), SMMNODE_OBJTYPE_GRADE, type, credit, energy, grade);
+                          smmdb_addTail(LISTNO_OFFSET_GRADE+player, gradePtr);
+                          break;
+                       }
+                       else if (ch == 'n')
+                          break;
+                       else
+                           printf("Invalid input!\n");
                  }
-                 if (ch == 'n')
-                    break;
              }
              break;
         
@@ -279,7 +323,7 @@ void actionNode(int player)
              }
              
              // experimenting state -> start experiment 
-             printf(" --> [%ith Player RESULT] pose : %i | type : %s (Not experimenting)\n", 
+             printf(" --> [%ith Player RESULT] pose : %i | type : %s (Experimenting)\n", 
                       player, smm_players[player].pos, typeName);
              
              smm_players[player].energy -= energy;
@@ -497,6 +541,15 @@ int main(int argc, const char * argv[])
         turn = (turn + 1)%smm_player_nr;
     }
     
+    int graduatedPlayer = getGraduatedPlayerIdx();
+    
+    if (graduatedPlayer >= 0)
+    {
+       printf("\n============= Game over ====\n");
+       printf("Graduated Player: %s (credit: %i)\n", 
+                         smm_players[graduatedPlayer].name, smm_players[graduatedPlayer].credit);
+       printGrades(graduatedPlayer);
+    }
     free(smm_players);
     
     system("PAUSE");
