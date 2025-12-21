@@ -47,34 +47,23 @@ static char smmObj_gradeName[SMMNODE_MAX_GRADE][MAX_CHARNAME] = {
 
 //structure type definition
 typedef struct {
-       // node
        char name[MAX_CHARNAME];
        int objType; 
-       int type; // node type
+       int type; 
        int credit;
        int energy;
        int grade;       
-} smmObj_object_t; // _t: type (not instance)
-
-typedef struct {
-       char foodName[MAX_CHARNAME];
-       int foodEnergy;
-} smmObj_food_t;
-
-typedef struct {
-        char fest[MAX_CHARNAME];
-} smmObj_fest_t;
+} smmObj_object_t; 
 
 //object generation
 void* smmObj_genObject(char* name, int objType, int type, int credit, int energy, int grade)
 {
-    smmObj_object_t *ptr;
-    
-    ptr = (smmObj_object_t *)malloc(sizeof(smmObj_object_t));
+    smmObj_object_t *ptr = (smmObj_object_t *)malloc(sizeof(smmObj_object_t));
+    if (!ptr) return NULL;
     
     strcpy(ptr->name, name);
-    ptr->type = type;
     ptr->objType = objType;
+    ptr->type = type;
     ptr->credit = credit;
     ptr->energy = energy;
     ptr->grade = grade;
@@ -82,31 +71,40 @@ void* smmObj_genObject(char* name, int objType, int type, int credit, int energy
     return ((void*)ptr);
 }
 
-void* smmObj_genFood(char* foodName, int foodEnergy)
+// food card generation
+void* smmObj_genObjectFood(char* foodName, int foodEnergy)
 {
-      smmObj_food_t *foodPtr;
+      smmObj_object_t *ptr = (smmObj_object_t *)malloc(sizeof(smmObj_object_t));
+      if (!ptr) return NULL;
       
-      foodPtr = (smmObj_food_t *)malloc(sizeof(smmObj_food_t));
+      strcpy(ptr->name, foodName);
+      ptr->objType = SMMNODE_OBJTYPE_FOOD;
+      ptr->type = 0;
+      ptr->credit = 0;
+      ptr->energy = foodEnergy;
+      ptr->grade = 0;
       
-      strcpy(foodPtr->foodName, foodName);
-      foodPtr->foodEnergy = foodEnergy;
-      
-      return ((void*)foodPtr);
+      return ((void*)ptr);
 }
 
-void* smmObj_genFest(char* fest)
+// festival card generation
+void* smmObj_genObjectFest(char* fest)
 {
-      smmObj_fest_t *festPtr;
+      smmObj_object_t *ptr = (smmObj_object_t *)malloc(sizeof(smmObj_object_t));
+      if (!ptr) return NULL;
       
-      festPtr = (smmObj_fest_t *)malloc(sizeof(smmObj_fest_t));
+      strcpy(ptr->name, fest);
+      ptr->objType = SMMNODE_OBJTYPE_FEST;
+      ptr->type = 0;
+      ptr->credit = 0;
+      ptr->energy = 0;
+      ptr->grade = 0;
       
-      strcpy(festPtr->fest, fest);
-      
-      return ((void*)festPtr);
+      return ((void*)ptr);
 }
      
 //member retrieving
-char* smmObj_getObjectName(void *ptr) // print class name
+char* smmObj_getObjectName(void *ptr) 
 {
       smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
       
@@ -147,27 +145,4 @@ char* smmObj_getObjectGradeName(void *ptr)
       smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
       
       return (smmObj_gradeName[objPtr->grade]);
-}
-
-// Food configuration
-char* smmObj_getObjectFoodName(void *ptr)
-{
-    smmObj_food_t* foodPtr = (smmObj_food_t*)ptr;
-    
-    return (foodPtr->foodName);
-}
-
-int smmObj_getObjectFoodEnergy(void *ptr)
-{
-    smmObj_food_t* foodPtr = (smmObj_food_t*)ptr;
-    
-    return (foodPtr->foodEnergy);
-}
-
-// Festival configuration
-char* smmObj_getObjectFest(void *ptr)
-{
-      smmObj_fest_t* festPtr = (smmObj_fest_t*)ptr;
-      
-      return (festPtr->fest);
 }

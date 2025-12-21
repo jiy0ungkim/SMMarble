@@ -57,12 +57,10 @@ int smmObj_getObjectCredit(void *ptr);
 char* smmObj_getObjectGradeName(void *ptr);
 
 // 
-void* smmObj_genFood(char* foodName, int foodEnergy);
-char* smmObj_getObjectFoodName(void *ptr);
-int smmObj_getObjectFoodEnergy(void *ptr);
+void* smmObj_genObjectFood(char* foodName, int foodEnergy);
+void* smmObj_genObjectFest(char* fest);
 
-void* smmObj_genFest(char* fest);
-char* smmObj_getObjectFest(void *ptr);
+
 //member retrieving
 
 
