@@ -158,9 +158,10 @@ void printPlayerStatus(void)
      for (i=0; i<smm_player_nr; i++)
      {
          void *nodePtr = smmdb_getData(LISTNO_NODE, smm_players[i].pos);
-         printf("%s - position : %i (%s), credit : %i, energy : %i\n", 
+         printf("%s - position : %i (%s), experimenting state: %i (not experimenting), credit : %i, energy : %i\n", 
                     smm_players[i].name, 
                     smm_players[i].pos, 
+                    smm_players[i].flag_experimenting,
                     smmObj_getObjectTypeName(nodePtr), 
                     smm_players[i].credit, 
                     smm_players[i].energy); 
@@ -393,6 +394,36 @@ void actionNode(int player)
      }
 }
 
+void freeAll(void)
+{
+    int i;
+    int last;
+
+    // 1) board nodes
+    while ((last = smmdb_len(LISTNO_NODE) - 1) >= 0)
+        smmdb_deleteData(LISTNO_NODE, last);
+
+    // 2) food cards
+    while ((last = smmdb_len(LISTNO_FOODCARD) - 1) >= 0)
+        smmdb_deleteData(LISTNO_FOODCARD, last);
+
+    // 3) festival cards
+    while ((last = smmdb_len(LISTNO_FESTCARD) - 1) >= 0)
+        smmdb_deleteData(LISTNO_FESTCARD, last);
+
+    // 4) grades
+    for (i = 0; i < smm_player_nr; i++)
+    {
+        while ((last = smmdb_len(LISTNO_OFFSET_GRADE + i) - 1) >= 0)
+            smmdb_deleteData(LISTNO_OFFSET_GRADE + i, last);
+    }
+
+    // 5) players
+    free(smm_players);
+    smm_players = NULL;
+}
+
+
 int main(int argc, const char * argv[]) 
 {
     FILE* fp;
@@ -550,7 +581,9 @@ int main(int argc, const char * argv[])
                          smm_players[graduatedPlayer].name, smm_players[graduatedPlayer].credit);
        printGrades(graduatedPlayer);
     }
-    free(smm_players);
+    
+    // memory free
+    freeAll();
     
     system("PAUSE");
     return 0;
